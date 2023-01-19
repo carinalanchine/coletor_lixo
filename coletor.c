@@ -1,113 +1,96 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef struct contador_ref {
+#define true 1
+#define false 0
+
+typedef struct contadorReferencias {
     int contador;
     void* endereco;
-    struct contador_ref* prox;
+    struct contadorReferencias* prox;
 } Contador;
 
 Contador* memoria = NULL;
 
 void* malloc2(int tamanho)
 {   
-    Contador* novo_contador = (Contador*)malloc(sizeof(Contador));
-    novo_contador->contador = 1;
+    Contador* novo = (Contador*)malloc(sizeof(Contador));
+    novo->contador = 1;
 
-    void* novo_endereco = malloc(tamanho);
-    novo_contador->endereco = novo_endereco;
+    void* novoEndereco = malloc(tamanho);
+    novo->endereco = novoEndereco;
 
-    if (memoria == NULL)
-    {
-        novo_contador->prox = memoria;
-        memoria = novo_contador;
-    }
+    novo->prox = memoria;
+    memoria = novo;
 
-    else 
-    {
-        Contador* aux = memoria;
-
-        while (aux->prox != NULL)
-        {
-            aux = aux->prox;
-        }
-
-        aux->prox = novo_contador;
-        novo_contador->prox = NULL;
-    }
-
-    return novo_endereco;
+    return novoEndereco;
 }
 
-void atrib2(void** endereco1, void* endereco2)
+void coletaLixo()
 {
     Contador* aux = memoria;
     Contador* anterior = NULL;
-    int i = 0;
 
-    while (i != 2)
-    {
-        if (aux->endereco == *endereco1)
-        {
-            aux->contador -= 1;
-            ++i;
-
-            if (aux->contador == 0)
-            {
-                free(aux->endereco);
-
-                if (anterior == NULL)
-                {
-                    memoria = aux->prox;
-                    free(aux);
-                }
-
-                else
-                {
-                    anterior->prox = aux->prox;
-                    free(aux);
-                    aux = anterior;
-                }
-            }
-
-            if (endereco2 == NULL)
-            {
-                break;
-            }
-        }
-
-        else if (aux->endereco == endereco2)
-        {
-            aux->contador += 1;
-            ++i;
-        }
-        
+    while (aux->contador) {
         anterior = aux;
         aux = aux->prox;
     }
 
-    *endereco1 = endereco2;
+    if (anterior == NULL) 
+        memoria = aux->prox;
+
+    else 
+        anterior->prox = aux->prox;
+
+    free(aux->endereco);
+    free(aux);
 }
 
-void dump()
+void atrib2(void** endereco1, void* endereco2)
 {
-    if (memoria == NULL)
-    {
-        printf("\n-----------------MEMORIA VAZIA-----------------\n\n");
-    }
+    if (*endereco1 != endereco2) {
 
-    else
-    {
         Contador* aux = memoria;
-        
-        printf("\n-----------------MEMORIA-----------------");
-        while (aux != NULL)
-        {
-            printf("\nEndereço: %p",aux->endereco);
-            printf("\nConteúdo: %d",*((int*)aux->endereco));
-            printf("\nContador: %d\n",aux->contador);
+        int flagEncontrou = 0;
+        int zerouContador = false;
+
+        while (flagEncontrou != 2) {
+
+            if (aux->endereco == *endereco1) {
+
+                aux->contador--;
+                flagEncontrou++;
+
+                if (!aux->contador)
+                    zerouContador = true;
+
+                if (endereco2 == NULL) break;
+            }
+
+            else if (aux->endereco == endereco2) {
+                aux->contador++;
+                flagEncontrou++;
+            }
+
             aux = aux->prox;
         }
-        printf("-----------------------------------------\n\n");
+
+        *endereco1 = endereco2;
+        if (zerouContador) coletaLixo();
     }
+}
+
+int dump()
+{
+    if (memoria == NULL) return false;
+
+    Contador* aux = memoria;
+
+    while (aux != NULL) {
+        printf("\nEndereco: %p",aux->endereco);
+        printf("\nReferencias: %d\n",aux->contador);
+        aux = aux->prox;
+    }
+
+    return true;
 }
