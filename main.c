@@ -1,10 +1,3 @@
-/*  --------------------- COMPILAR ---------------------
-
-    1) gcc -c main.c -o main.o
-    2) gcc -o main main.o -L. -l_coletor
-
-*/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include "coletor.h"
